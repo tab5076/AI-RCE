@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GenAI Icon and Text Selector</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body { 
+            font-family: "Lato", sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: auto;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        
+        .modal-container {
+            position: relative;
+            z-index: 1000;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            width: 1200px;
+            height: 850px;
+            display: flex;
+            flex-direction: column;
+            margin: 20px auto;
+            overflow: visible;
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .topnav { background-color: #041E42; padding: 20px; border-bottom: 2px solid #1E407C; position: relative; overflow: visible; }
+        
+        .modal-close-btn {
+            background: none;
+            border: none;
+            color: #ffd100;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px 10px;
+            transition: color 0.2s;
+            font-weight: bold;
+            line-height: 1;
+        }
+        .modal-close-btn:hover {
+            color: #ffffff;
+        }
+        .modal-close-btn:focus {
+            outline: 3px solid #ffd100;
+            outline-offset: 2px;
+        }
+
+        .category-btn { 
+            padding: 10px 20px; 
+            font-size: 14px; 
+            color: #ffffff; 
+            background: #1E407C; 
+            cursor: pointer; 
+            border: 2px solid #1E407C; 
+            border-radius: 4px; 
+            transition: all 0.2s ease; 
+            font-weight: bold; 
+        }
+        .category-btn:hover, .category-btn.active { 
+            color: #1E407C; 
+            background-color: #ffffff; 
+            border-color: #1E407C; 
+        }
+        .category-btn:focus {
+            outline: 3px solid #ffd100;
+            outline-offset: 2px;
+        }
+
+        .overview-btn { 
+            padding: 10px 20px; 
+            font-size: 14px; 
+            color: #ffd100; 
+            background: #041E42; 
+            cursor: pointer; 
+            border: 2px solid #ffd100; 
+            border-radius: 4px; 
+            transition: all 0.2s ease; 
+            font-weight: bold; 
+            position: relative; 
+        }
+        .overview-btn:hover, .overview-btn.active { 
+            color: #041E42; 
+            background-color: #ffd100; 
+            border-color: #ffd100; 
+        }
+        .overview-btn:focus {
+            outline: 3px solid #96BEE6;
+            outline-offset: 2px;
+        }
+        .overview-btn:hover::after {
+            content: "Help me build it";
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            margin-bottom: 8px;
+            z-index: 100001;
+        }
+        .overview-btn:hover::before {
+            content: "";
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #333;
+            margin-bottom: 2px;
+            z-index: 100001;
+        }
+
+        .option-group { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+        
+        .option-label { color: #041E42; font-size: 13px; font-weight: bold; white-space: nowrap; }
+
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #444; transition: 0.3s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: 0.3s; border-radius: 50%; }
+        input:checked + .slider { background-color: #96BEE6; }
+        input:checked + .slider:before { transform: translateX(26px); }
+        input:focus + .slider { outline: 3px solid #ffd100; outline-offset: 2px; }
+
+        .main { flex: 1; font-size: 20px; padding: 0px 10px; overflow-y: auto; overflow-x: hidden; }
+
+        /* Self-Directed Layout */
+        .self-directed-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 10px 20px 80px 20px; /* Reduced vertical padding */
+        }
+        .category-selection-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px 20px; /* Reduced padding */
+            margin: 0 0 12px 0; /* Reduced margin */
+        }
+        .category-selection-section h2 {
+            color: #041E42;
+            font-size: 1.1rem;
+            margin: 0 0 10px 0; /* Reduced margin */
+            font-weight: bold;
+        }
+        .category-buttons-inline {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .toggles-section {
+            background: #ffffff;
+            border: 2px solid #1E407C;
+            border-radius: 8px;
+            padding: 12px 20px; /* Reduced padding */
+            margin: 0 0 12px 0; /* Reduced margin */
+        }
+        .toggles-section h2 {
+            color: #041E42;
+            font-size: 1.1rem;
+            margin: 0 0 10px 0; /* Reduced margin */
+            font-weight: bold;
+        }
+        .toggle-options {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+        #preview {
+            margin-top: 15px; /* Reduced margin */
+        }
+
+        .btn-select { border: none; color: #041E42; padding: 10px 24px; cursor: pointer; background-color: #ffd100; border-radius: 4px; font-weight: bold; font-size: 14px; transition: background 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-select:hover { background: #e6bc00; }
+        .btn-select:focus { outline: 3px solid #041E42; outline-offset: 2px; }
+
+        /* ── Sticky Footer ── */
+        .sticky-footer { 
+            background: #ffffff; 
+            border-top: 2px solid #1E407C; 
+            padding: 14px 20px; 
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: flex-end; 
+            gap: 8px;
+        }
+        .sticky-footer.visible {
+            display: flex;
+        }
+        .footer-note {
+            font-size: 0.85rem;
+            color: #555;
+            font-style: italic;
+            text-align: right;
+            max-width: 600px;
+            margin: 0 0 0 auto;
+        }
+
+        /* ── Wizard ── */
+        .wizard { padding: 30px 20px 40px 20px; max-width: 860px; margin: 0 auto; }
+        .wizard h1 { color: #041E42; font-size: 1.7rem; margin-bottom: 6px; border-bottom: 3px solid #1E407C; padding-bottom: 10px; }
+        .wizard .tool-description { font-size: 1rem; color: #333; margin-bottom: 28px; line-height: 1.6; }
+
+        /* Pathway Selection Screen */
+        .pathway-selection {
+            text-align: center;
+            padding: 60px 40px;
+        }
+        .pathway-selection h1 {
+            color: #041E42;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            border: none;
+        }
+        .pathway-selection p {
+            color: #444;
+            font-size: 1.1rem;
+            margin-bottom: 50px;
+            line-height: 1.6;
+        }
+        .pathway-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .pathway-card {
+            border: 3px solid #1E407C;
+            border-radius: 12px;
+            padding: 40px 30px;
+            cursor: pointer;
+            background: #ffffff;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .pathway-card:hover {
+            background: #f0f4fa;
+            border-color: #96BEE6;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .pathway-card:focus {
+            outline: 3px solid #ffd100;
+            outline-offset: 2px;
+            background: #f0f4fa;
+        }
+        .pathway-card h2 {
+            color: #041E42;
+            font-size: 1.5rem;
+            margin: 0 0 15px 0;
+        }
+        .pathway-card p {
+            color: #444;
+            font-size: 1rem;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* Hover tooltip for pathway cards */
+        .pathway-card::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            white-space: nowrap;
+            margin-bottom: 10px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .pathway-card::before {
+            content: "";
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #333;
+            margin-bottom: 4px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .pathway-card:hover::after,
+        .pathway-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Step indicator */
+        .step-indicator { display: flex; align-items: center; gap: 0; margin-bottom: 28px; }
+        .step-pip { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: bold; color: #666; }
+        .step-pip .pip { width: 28px; height: 28px; border-radius: 50%; background: #757575; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: bold; flex-shrink: 0; }
+        .step-pip.active .pip { background: #1E407C; color: white; }
+        .step-pip.done .pip { background: #008755; color: white; }
+        .step-pip.active { color: #041E42; }
+        .step-pip.done { color: #008755; }
+        .step-connector { flex: 1; height: 2px; background: #ddd; margin: 0 8px; min-width: 20px; }
+        .step-connector.done { background: #008755; }
+
+        /* Step panels */
+        .step-panel { display: none; }
+        .step-panel.active { display: block; }
+        .step-label { font-size: 1.1rem; font-weight: bold; color: #041E42; margin-bottom: 16px; }
+
+        /* Choice cards */
+        .choice-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 14px; 
+            margin-bottom: 24px;
+            width: 100%; /* Fill horizontal space */
+        }
+        .choice-card { 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            padding: 18px 16px; 
+            cursor: pointer; 
+            background: #f8f9fa; 
+            transition: all 0.2s; 
+            text-align: left; 
+            width: 100%; 
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Align content to top-left */
+            justify-content: flex-start; /* Start from top */
+            font-family: inherit;
+            font-size: inherit;
+        }
+        .choice-card:hover { border-color: #1E407C; background: #f0f4fa; }
+        .choice-card:focus { outline: 3px solid #ffd100; outline-offset: 2px; }
+        .choice-card.selected { border-color: #1E407C; background: #e8f0fb; box-shadow: 0 0 0 2px #1E407C; }
+        .choice-card h2,
+        .choice-card h3 { 
+            margin: 0 0 6px 0; 
+            font-size: 1rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+            width: 100%;
+        }
+        .choice-card p { margin: 0; font-size: 0.85rem; color: #444; line-height: 1.5; }
+
+        /* Style step cards */
+        .style-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); 
+            gap: 14px; 
+            margin-bottom: 16px;
+            width: 100%; /* Fill horizontal space */
+        }
+        .style-card { text-align: left; }
+        .style-card h4 { margin: 0 0 8px 0; font-size: 0.95rem; color: #041E42; }
+        .style-card p { margin: 0 0 12px 0; font-size: 0.8rem; color: #444; }
+
+        /* Expandable yes/no cards */
+        .yesno-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 14px; 
+            width: 100%; /* Fill horizontal space */
+            margin-bottom: 24px;
+        }
+
+        /* Visual example boxes */
+        .example-box {
+            background: #ffffff;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            padding: 0;
+            font-size: 0.75rem;
+            text-align: left;
+            margin-top: 8px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .example-label {
+            font-size: 0.75rem;
+            color: #555;
+            font-style: italic;
+            margin-bottom: 6px;
+            display: block;
+        }
+        .example-box-header {
+            font-weight: bold;
+            color: #041E42;
+            margin: 0;
+            padding: 12px 14px;
+            font-size: 0.75rem;
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            background: #f0f4fa;
+            border-bottom: 1px solid #ddd;
+        }
+        .example-box-content {
+            color: #444;
+            line-height: 1.5;
+            padding: 12px 14px;
+        }
+        .example-toggle {
+            display: inline-block;
+            background: #1E407C;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 3px;
+            border: none;
+            font-family: inherit;
+            font-size: 0.75rem;
+            margin: 8px 14px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .example-toggle:hover {
+            background: #163266;
+        }
+        .example-toggle:focus {
+            outline: 3px solid #ffd100;
+            outline-offset: 2px;
+        }
+        .example-hidden {
+            display: none;
+        }
+
+        /* Summary */
+        .summary-box { background: #f0f4fa; border-left: 4px solid #1E407C; border-radius: 4px; padding: 20px 24px; margin-bottom: 24px; }
+        .summary-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-size: 0.95rem; }
+        .summary-row .summary-label { font-weight: bold; color: #041E42; min-width: 150px; }
+        .summary-row .summary-value { color: #333; }
+
+        /* Nav buttons */
+        .wizard-nav { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .btn-back { padding: 10px 20px; background: none; border: 2px solid #1E407C; color: #1E407C; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: all 0.2s; }
+        .btn-back:hover { background: #1E407C; color: white; }
+        .btn-back:focus { outline: 3px solid #ffd100; outline-offset: 2px; }
+        .btn-next { padding: 10px 24px; background: #1E407C; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: background 0.2s; }
+        .btn-next:hover { background: #163266; }
+        .btn-next:focus { outline: 3px solid #ffd100; outline-offset: 2px; }
+        .btn-next:disabled { background: #aaa; cursor: not-allowed; }
+        .btn-go { padding: 10px 28px; background: #ffd100; border: none; color: #041E42; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; transition: background 0.2s; }
+        .btn-go:hover { background: #e6bc00; }
+        .btn-go:focus { outline: 3px solid #041E42; outline-offset: 2px; }
+        .btn-restart { padding: 10px 20px; background: none; border: 2px solid #bc204b; color: #bc204b; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: all 0.2s; margin-left: auto; }
+        .btn-restart:hover { background: #bc204b; color: white; }
+        .btn-restart:focus { outline: 3px solid #ffd100; outline-offset: 2px; }
+        .btn-clear { padding: 8px 16px; background: #96BEE6; color: #001E44; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        .btn-clear:hover { background: #7ba8d1; }
+        .btn-clear:focus { outline: 3px solid #ffd100; outline-offset: 2px; }
+        
+        /* Responsive modal adjustments */
+        @media (max-width: 1250px) {
+            .modal-container {
+                width: 95%;
+                height: 90vh;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .modal-container {
+                width: 95%;
+                height: 95vh;
+                margin: 10px auto;
+                border-radius: 4px;
+            }
+            .topnav {
+                padding: 15px;
+            }
+            .modal-close-btn {
+                font-size: 20px;
+                padding: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay" aria-hidden="true"></div>
+    <div class="modal-container" role="dialog" aria-modal="true" aria-labelledby="mainHeading">
+        <div class="topnav">
+            <button class="overview-btn active" id="overviewTab" onclick="showPathwaySelection()" aria-label="Start - Return to pathway selection">Start</button>
+        </div>
+
+        <div class="main">
+
+            <!-- ═══ PATHWAY SELECTION SCREEN ═══ -->
+            <div id="pathwaySelection" class="pathway-selection">
+                <h1 id="mainHeading">GenAI Icon and Text Selector</h1>
+                <p>Choose how you'd like to create your GenAI statement:</p>
+                
+                <div class="pathway-grid">
+                    <div class="pathway-card" onclick="selectPathway('guided')" onkeydown="handleKeyPress(event, () => selectPathway('guided'))" tabindex="0" role="button" aria-label="Select guided pathway" data-tooltip="Step-by-step guide">
+                        <h2>Guided</h2>
+                        <p>Step-by-step guide to choosing permission level and display option.</p>
+                    </div>
+                    
+                    <div class="pathway-card" onclick="selectPathway('self-directed')" onkeydown="handleKeyPress(event, () => selectPathway('self-directed'))" tabindex="0" role="button" aria-label="Select self-directed pathway" data-tooltip="Build it yourself">
+                        <h2>Self-Directed</h2>
+                        <p>Use provided buttons and toggles to select permission level and display option.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══ WIZARD / GUIDED PAGE ═══ -->
+            <div id="landingPage" class="wizard" style="display:none;">
+                <h1 id="mainHeading">GenAI Icon and Text Selector</h1>
+
+                <!-- Step indicator: now 4 steps -->
+                <div class="step-indicator">
+                    <div class="step-pip active" id="pip1"><div class="pip">1</div>&nbsp;Permission Level</div>
+                    <div class="step-connector" id="conn1"></div>
+                    <div class="step-pip" id="pip2"><div class="pip">2</div>&nbsp;Background</div>
+                    <div class="step-connector" id="conn2"></div>
+                    <div class="step-pip" id="pip3"><div class="pip">3</div>&nbsp;Expandable</div>
+                    <div class="step-connector" id="conn3"></div>
+                    <div class="step-pip" id="pip4"><div class="pip">4</div>&nbsp;Review & Add/Embed</div>
+                </div>
+
+                <!-- ── Step 1: Permission level ── -->
+                <div class="step-panel active" id="step1">
+                    <div class="step-label">What level of GenAI use applies to this course or assignment?</div>
+                    <div class="choice-grid">
+                        <button class="choice-card" id="card-Allowed" onclick="selectPolicy('Allowed', this)" aria-label="Select Allowed permission level">
+                            <h2><img src="https://lmstools.ais.psu.edu/psuicons/ai/allowed%20icon.png" alt="" height="22" style="vertical-align:middle;" role="presentation"> Allowed</h2>
+                            <p>Students may responsibly use GenAI within specific, instructor-defined guidelines.</p>
+                        </button>
+                        <button class="choice-card" id="card-Limited" onclick="selectPolicy('Limited', this)" aria-label="Select Limited permission level">
+                            <h2><img src="https://lmstools.ais.psu.edu/psuicons/ai/small/limited%20icon.png" alt="" height="22" style="vertical-align:middle;" role="presentation"> Limited</h2>
+                            <p>Students may responsibly use GenAI within specific, instructor-defined guidelines.</p>
+                        </button>
+                        <button class="choice-card" id="card-NotPermitted" onclick="selectPolicy('NotPermitted', this)" aria-label="Select Not Permitted permission level">
+                            <h2><img src="https://lmstools.ais.psu.edu/psuicons/ai/not%20permitted%20no%20spark%20icon.png" alt="" height="22" style="vertical-align:middle;" role="presentation"> Not Permitted</h2>
+                            <p>Students may not use GenAI for this course or assignment.</p>
+                        </button>
+                    </div>
+                    <div class="wizard-nav">
+                        <button class="btn-next" id="next1" onclick="goStep(2)" disabled>Next →</button>
+                    </div>
+                </div>
+
+                <!-- ── Step 2: Background choice ── -->
+                <div class="step-panel" id="step2">
+                    <div class="step-label">How should the background of the statement appear?</div>
+                    <div class="style-grid">
+                        <button class="choice-card style-card" id="style-standard" onclick="selectBackground('standard')" aria-label="Select no background option">
+                            <h3>No Background</h3>
+                            <p>White background. No color fill.</p>
+                        </button>
+                        <button class="choice-card style-card" id="style-background" onclick="selectBackground('background')" aria-label="Select colored background option">
+                            <h3>Colored Background</h3>
+                            <p>Tinted background matching the selected GenAI usage level.</p>
+                        </button>
+                        <button class="choice-card style-card" id="style-icononly" onclick="selectBackground('icononly')" aria-label="Select icon and title only option">
+                            <h3>Icon and Title</h3>
+                            <p>Only the GenAI Icon and title are added. No additional text included. (Skips the next step.)</p>
+                        </button>
+                    </div>
+                    <div class="wizard-nav">
+                        <button class="btn-back" onclick="goStep(1)">← Back</button>
+                        <button class="btn-next" id="next2" onclick="advanceFromStep2()" disabled>Next →</button>
+                    </div>
+                </div>
+
+                <!-- ── Step 3: Expandable choice ── -->
+                <div class="step-panel" id="step3">
+                    <div class="step-label">How would you like the GenAI Icon and associated text to be displayed in the content?</div>
+                    <div class="yesno-grid">
+                        <button class="choice-card style-card" id="expand-no" onclick="selectExpandable(false)" aria-label="Select expanded text display">
+                            <h3>Expanded Text</h3>
+                            <p>All GenAI usage details are visible to students at all times.</p>
+                            
+                            <!-- Example Preview -->
+                            <div class="example-label">Example:</div>
+                            <div class="example-box">
+                                <div class="example-box-header">GenAI Use Guidance Title</div>
+                                <div class="example-box-content">
+                                    All details and supporting text are shown immediately. Students can see the full content without clicking anything.
+                                </div>
+                            </div>
+                        </button>
+                        
+                        <button class="choice-card style-card" id="expand-yes" onclick="selectExpandable(true)" aria-label="Select minimized text display with show/hide button">
+                            <h3>Minimized Text</h3>
+                            <p>Show/Hide Details – GenAI usage details are hidden by default. Students must select the "GenAI Use Guidance" show/hide.</p>
+                            
+                            <!-- Example Preview -->
+                            <div class="example-label">Example:</div>
+                            <div class="example-box">
+                                <div class="example-box-header">GenAI Use Guidance Title</div>
+                                <span class="example-toggle" onclick="toggleExample(event)" onkeydown="handleKeyPress(event, () => toggleExample(event))" tabindex="0" role="button" aria-label="Toggle example details">▶ Show Details</span>
+                                <div class="example-box-content example-hidden" id="minimizedExample">
+                                    Details are hidden by default. Students must click the button above to reveal the full content.
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="wizard-nav">
+                        <button class="btn-back" onclick="goStep(2)">← Back</button>
+                        <button class="btn-next" id="next3" onclick="goStep(4)" disabled>Next →</button>
+                    </div>
+                </div>
+
+                <!-- ── Step 4: Summary / Review ── -->
+                <div class="step-panel" id="step4">
+                    <div class="step-label">Review your selections</div>
+                    <div class="summary-box">
+                        <div class="summary-row">
+                            <span class="summary-label">Permission Level:</span>
+                            <span class="summary-value" id="summaryPolicy">—</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Background:</span>
+                            <span class="summary-value" id="summaryBackground">—</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Display:</span>
+                            <span class="summary-value" id="summaryExpandable">—</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Note -->
+                    <div class="step-label" id="reviewNote" style="margin-top:24px;font-size:0.9rem;font-weight:normal;color:#444;line-height:1.5;">
+                    <p style="margin-top:8px;margin-bottom:16px;color:#444;line-height:1.5;">This is how your GenAI Icon and supporting text will appear in your course. Remember to edit as needed to ensure alignment with your course after embedding.</p>
+                    </div>
+                    
+                    <!-- Preview Area -->
+                    <div class="step-label" style="margin-top:16px;">Preview</div>
+                    <div id="wizardPreview" style="margin-bottom:24px;"></div>
+                </div>
+
+            </div>
+            <!-- ═══ END WIZARD ═══ -->
+
+            <!-- ═══ SELF-DIRECTED PAGE ═══ -->
+            <div id="selfDirectedPage" class="self-directed-container" style="display:none;">                
+                <!-- Instructions -->
+                <div style="background:#e8f4fd;border-left:4px solid #1E407C;border-radius:4px;padding:10px 18px;margin-bottom:12px;">
+                    <p style="margin:0;color:#041E42;font-size:0.95rem;line-height:1.5;">
+                        Use the buttons below to select your permission level, then customize the display with the toggles.
+                    </p>
+                </div>
+                
+                <!-- Category Selection -->
+                <div class="category-selection-section">
+                    <h2>Select Permission Level</h2>
+                    <div class="category-buttons-inline">
+                        <button class="category-btn" id="tabAllowed" onclick="setCategory(this, 'Allowed')" aria-label="Select Allowed permission category">Allowed</button>
+                        <button class="category-btn" id="tabLimited" onclick="setCategory(this, 'Limited')" aria-label="Select Limited permission category">Limited</button>
+                        <button class="category-btn" id="tabNotPermitted" onclick="setCategory(this, 'NotPermitted')" aria-label="Select Not Permitted permission category">Not Permitted</button>
+                    </div>
+                </div>
+                
+                <!-- Toggle Controls -->
+                <div class="toggles-section">
+                    <h2>Customize Display</h2>
+                    <div class="toggle-options">
+                        <div class="option-group"><span class="option-label">Background</span><label class="toggle-switch" aria-label="Background toggle"><input type="checkbox" id="bgToggle" onchange="toggle('bg')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.click();}"><span class="slider" role="presentation"></span></label></div>
+                        <div class="option-group"><span class="option-label">Expandable</span><label class="toggle-switch" aria-label="Expandable toggle"><input type="checkbox" id="expandToggle" onchange="toggle('expand')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.click();}"><span class="slider" role="presentation"></span></label></div>
+                        <div class="option-group"><span class="option-label">Icon and Title</span><label class="toggle-switch" aria-label="Icon and Title toggle"><input type="checkbox" id="iconToggle" onchange="toggle('icon')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.click();}"><span class="slider" role="presentation"></span></label></div>
+                        <div class="option-group"><button onclick="clearAll()" class="btn-clear" aria-label="Clear all display options">Clear</button></div>
+                    </div>
+                </div>
+                
+                <!-- Preview -->
+                <div style="margin-top:24px;">
+                    <div style="font-size:0.9rem;font-weight:normal;color:#444;line-height:1.5;margin-bottom:16px;">
+                        <em>This is how your GenAI Icon and supporting text will appear in your course. Remember to edit as needed to ensure alignment with your course after embedding.</em>
+                    </div>
+                    <div class="step-label" style="margin-top:16px;">Preview</div>
+                    <div id="preview"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ STICKY FOOTER ═══ -->
+        <div class="sticky-footer" id="stickyFooter">
+            <button class="btn-select" id="addToCourseBtn">Add To Course</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Modal close function
+        function closeModal() {
+            // In a real implementation, this would close the modal
+            // For demo purposes, you might want to hide the modal or redirect
+            alert('Modal close clicked - In production, this would close the modal or return to the parent page');
+        }
+        
+        const sharedFooter = `
+            <hr /><h3>Ethical GenAI Use</h3><p>You should only use GenAI ethically, which includes using a safe, secure, humane, transparent, and environmentally friendly approach to GenAI.</p>
+            <h3>Citing GenAI</h3><p>You must provide attribution for any GenAI-generated material that you quote, paraphrase, or incorporate into your own work. Please refer to these <a href="https://guides.libraries.psu.edu/GenAI/citing" target="_blank">Generative AI Citation Guidelines</a> and <a href="https://guides.libraries.psu.edu/c.php?g=1338692&p=9866353" target="_blank">Penn State's Generative AI Library Guide</a>.</p>`;
+
+        const content = {
+            Allowed: {
+                color: "#008755", bg: "#edf8f7",
+                icon: "https://lmstools.ais.psu.edu/psuicons/ai/allowed%20icon.png",
+                title: "GenAI Use Is Allowed",
+                body: `<p>You may responsibly use GenAI within the following guidelines:</p>
+                    <h3>Research and Data Activities</h3><ul><li><strong>Brainstorm:</strong> You may use GenAI to brainstorm and generate ideas.</li><li><strong>Study Support:</strong> You may use GenAI to explain concepts, break down or summarize notes, suggest study strategies, and self-test.</li><li><strong>Research:</strong> You may use GenAI to research, refine research questions, find key words, summarize articles, and suggest follow-up questions.</li><li><strong>Analyze Data:</strong> You may use GenAI to generate conclusions based on analysis of a dataset.</li><li><strong>Code:</strong> You may use GenAI to suggest functions or generate, explain, or debug code.</li></ul>
+                    <h3>Text Activities</h3><ul><li><strong>Spelling and Grammar:</strong> You may use GenAI to correct spelling and grammar.</li><li><strong>Outline and Format:</strong> You may use GenAI to create an outline for a paper or presentation, and/or to format presentation slides.</li><li><strong>Draft:</strong> You may use GenAI to draft your initial work.</li><li><strong>Rewrite:</strong> You may use GenAI to help you refine text you have written.</li></ul>
+                    <h3>Multimedia and Creative Activities</h3><ul><li><strong>Creative Expression:</strong> You may use GenAI to generate ideas, plot, or characters, and for creative expression, such as creating poems or song lyrics, or simulating writing styles.</li><li><strong>Create Multimedia:</strong> You may use GenAI to generate images, audio, or video.</li></ul>
+                    <h3>Special Use</h3><ul><li><strong>Special Use:</strong> You may use GenAI to<span style="background-color:#f9f2ce;"> [specify use].</span></li></ul>` + sharedFooter
+            },
+            Limited: {
+                color: "#ffd100", bg: "#FDfbf5",
+                icon: "https://lmstools.ais.psu.edu/psuicons/ai/small/limited%20icon.png",
+                title: "GenAI Use Is Limited",
+                body: `<p>You may responsibly use GenAI within the following guidelines:</p>
+                    <h3>Research and Data Activities</h3><ul><li><strong>Brainstorm:</strong> You may use GenAI to brainstorm and generate ideas.</li><li><strong>Study Support:</strong> You may use GenAI to explain concepts, break down or summarize notes, suggest study strategies, and self-test.</li><li><strong>Research:</strong> You may use GenAI to research, refine research questions, find key words, summarize articles, and suggest follow-up questions.</li><li><strong>Analyze Data:</strong> You may use GenAI to generate conclusions based on analysis of a dataset.</li><li><strong>Code:</strong> You may use GenAI to suggest functions or generate, explain, or debug code.</li></ul>
+                    <h3>Text Activities</h3><ul><li><strong>Spelling and Grammar:</strong> You may use GenAI to correct spelling and grammar.</li><li><strong>Outline and Format: </strong>You may use GenAI to create an outline for a paper or presentation, and/or to format presentation slides.</li><li><strong>Draft:</strong> You may use GenAI to draft your initial work.</li><li><strong>Enhance or Revise Original Work:</strong> You may use GenAI to help you refine text that you have written.</li></ul>
+                    <h3>Multimedia and Creative Activities</h3><ul><li><strong>Creative Expression:</strong> You may use GenAI to generate ideas, plot, or characters, and for creative expression, such as creating poems or song lyrics, or simulating writing styles.</li><li><strong>Create Multimedia:</strong> You may use GenAI to generate images, audio, or video.</li></ul>
+                    <h3>Special Use</h3><ul><li><strong>Special Use:</strong> You may use GenAI to<span style="background-color: #f9f2ce;"> [specify use].</span></li></ul>
+                    <p>&nbsp;</p>
+                    <h3><span style="background-color: #fbeeb8;">Not Permitted</span></h3><ul><li><span style="background-color: #fbeeb8;">[Instructor specify what is not permitted or remove]</span></li></ul>` + sharedFooter
+            },
+            NotPermitted: {
+                color: "#bc204b", bg: "#fbecf0",
+                icon: "https://lmstools.ais.psu.edu/psuicons/ai/not%20permitted%20no%20spark%20icon.png",
+                title: "GenAI Use Is Not Permitted",
+                body: `<p><strong>You may not use GenAI.</strong> This includes standalone large language models (LLMs), such as ChatGPT, Copilot, Gemini, Llama, DeepSeek, Claude, or Anthropic and software with AI features.</p>
+                    <h3>Express Yourself</h3><p>Your work should be completed independently, drawing on your own knowledge, reasoning, and original expressions. Your submissions should demonstrate your growth and meaningful connections to course concepts, independent of any GenAI tools.</p>
+                    <h3>GenAI Tools</h3><p><strong>The use of GenAI to create or revise content is not permitted. </strong>Many applications (e.g., Microsoft Word, PowerPoint, Excel) contain embedded GenAI features. If a program suggests alternatives or you prompt a program to do something for you, such as, "Rewrite this paragraph" or "Translate this text," this indicates that you are using GenAI software, and the feature should be disabled or avoided to the extent possible. If you're uncertain about the use of specific tools or features, consult with your instructor prior to using them in your assignment.</p>
+                    <h3>Not Permitted</h3>
+                    <p>The following actions are not permitted:</p>
+                    <p><span style="background-color: #fbeeb8;">[Instructor update or remove from list as needed]</span></p>
+                    <ul><li>using spelling and grammar checkers;</li><li>entering all or part of any assignment, discussion, test, or quiz question as part of a prompt to a GenAI tool;</li><li>incorporating any part of a GenAI-written response in an assignment, discussion, test, or quiz;</li><li>using GenAI to summarize or contextualize reading assignments, discussions, or source materials;</li><li>using GenAI to create slides, outlines, images, audio, or other creative expression; or</li><li>submitting your own work for this class to a GenAI tool for iteration or improvement.</li></ul>
+                    <p>&nbsp;</p>
+                    <p><span style="background-color: #fbeeb8;">[Optional Additional Instructor Statement &ndash; update or remove]</span></p>`
+            }
+        };
+
+        // ── Wizard state ──
+        let wizardPolicy     = null;
+        let wizardBase       = null;   // 'standard' | 'background' | 'icononly'
+        let wizardExpandable = false;
+        let expandSelected   = false;  // tracks if step 3 has been answered
+        let currentStep      = 1;
+        let current          = null;
+
+        const TOTAL_STEPS = 4;
+        const policyLabels = { Allowed: 'Allowed', Limited: 'Limited', NotPermitted: 'Not Permitted' };
+        const backgroundLabels = { standard: 'No Background', background: 'Colored Background', icononly: 'Icon and Title' };
+        const displayLabels = { expanded: 'Expanded', minimized: 'Minimized' };
+
+        // ── Pathway Selection ──
+        function selectPathway(pathway) {
+            if (pathway === 'guided') {
+                showLanding();
+            } else if (pathway === 'self-directed') {
+                // Go directly to Allowed (default option)
+                setCategory(document.getElementById('tabAllowed'), 'Allowed');
+            }
+        }
+
+        // Keyboard accessibility helper
+        function handleKeyPress(event, callback) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                callback();
+            }
+        }
+
+        function showPathwaySelection() {
+            // Clear all wizard state
+            wizardPolicy = null;
+            wizardBase = null;
+            wizardExpandable = false;
+            expandSelected = false;
+            currentStep = 1;
+            
+            // Clear all selections
+            document.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('next1').disabled = true;
+            document.getElementById('next2').disabled = true;
+            document.getElementById('next3').disabled = true;
+            
+            // Reset step panels
+            document.querySelectorAll('.step-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById('step1').classList.add('active');
+            updatePips();
+            
+            // Update navigation
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('overviewTab').classList.add('active');
+            document.getElementById('pathwaySelection').style.display = 'block';
+            document.getElementById('landingPage').style.display = 'none';
+            document.getElementById('selfDirectedPage').style.display = 'none';
+            document.getElementById('stickyFooter').classList.remove('visible');
+            current = null;
+        }
+
+        // Toggle example visibility
+        function toggleExample(event) {
+            event.stopPropagation();
+            const exampleContent = document.getElementById('minimizedExample');
+            const toggleBtn = event.target;
+            if (exampleContent.classList.contains('example-hidden')) {
+                exampleContent.classList.remove('example-hidden');
+                toggleBtn.textContent = '▼ Hide Details';
+            } else {
+                exampleContent.classList.add('example-hidden');
+                toggleBtn.textContent = '▶ Show Details';
+            }
+        }
+
+        // ── Step 1: Permission ──
+        function selectPolicy(cat, btn) {
+            document.querySelectorAll('#step1 .choice-card').forEach(c => c.classList.remove('selected'));
+            btn.classList.add('selected');
+            wizardPolicy = cat;
+            document.getElementById('next1').disabled = false;
+        }
+
+        // ── Step 2: Background / Icon Only ──
+        function selectBackground(style) {
+            wizardBase = style;
+            document.getElementById('style-standard').classList.toggle('selected',  style === 'standard');
+            document.getElementById('style-background').classList.toggle('selected', style === 'background');
+            document.getElementById('style-icononly').classList.toggle('selected',   style === 'icononly');
+            document.getElementById('next2').disabled = false;
+        }
+
+        // If "Icon Only" is chosen we skip step 3 (expandable doesn't apply)
+        function advanceFromStep2() {
+            if (wizardBase === 'icononly') {
+                wizardExpandable = false;
+                expandSelected   = true; // skip step 3
+                goStep(4);
+            } else {
+                goStep(3);
+            }
+        }
+
+        function goBackFromStep4() {
+            // If we skipped step 3 (Icon and Title), go back to step 2
+            if (wizardBase === 'icononly') {
+                goStep(2);
+            } else {
+                goStep(3);
+            }
+        }
+
+        // ── Step 3: Expandable ──
+        function selectExpandable(val) {
+            wizardExpandable = val;
+            expandSelected   = true;
+            document.getElementById('expand-yes').classList.toggle('selected',  val === true);
+            document.getElementById('expand-no').classList.toggle('selected', val === false);
+            document.getElementById('next3').disabled = false;
+        }
+
+        // ── Navigation ──
+        function goStep(n) {
+            document.getElementById('step' + currentStep).classList.remove('active');
+            currentStep = n;
+            document.getElementById('step' + n).classList.add('active');
+            updatePips();
+            if (n === 4) {
+                updateSummary();
+                showWizardPreview();
+                document.getElementById('stickyFooter').classList.add('visible');
+            } else {
+                document.getElementById('stickyFooter').classList.remove('visible');
+            }
+        }
+
+        function updatePips() {
+            for (let i = 1; i <= TOTAL_STEPS; i++) {
+                const pip = document.getElementById('pip' + i);
+                pip.classList.remove('active', 'done');
+                pip.removeAttribute('aria-current');
+                if (i < currentStep)        pip.classList.add('done');
+                else if (i === currentStep) {
+                    pip.classList.add('active');
+                    pip.setAttribute('aria-current', 'step');
+                }
+            }
+            for (let i = 1; i < TOTAL_STEPS; i++) {
+                document.getElementById('conn' + i).classList.toggle('done', i < currentStep);
+            }
+        }
+
+        // ── Step 4: Summary ──
+        function updateSummary() {
+            document.getElementById('summaryPolicy').textContent = policyLabels[wizardPolicy] || '—';
+            document.getElementById('summaryBackground').textContent = backgroundLabels[wizardBase] || '—';
+
+            if (wizardBase === 'icononly') {
+                document.getElementById('summaryExpandable').textContent = 'N/A (Icon and Title)';
+                document.getElementById('reviewNote').innerHTML = '<em>This is how your GenAI Icon and supporting text will appear in your course.</em>';
+            } else {
+                document.getElementById('summaryExpandable').textContent = wizardExpandable ? 'Minimized' : 'Expanded';
+                document.getElementById('reviewNote').innerHTML = '<em>This is how your GenAI Icon and supporting text will appear in your course. Remember to edit as needed to ensure alignment with your course after embedding.</em>';
+            }
+        }
+
+        // ── Show wizard preview ──
+        function showWizardPreview() {
+            const d  = content[wizardPolicy];
+            const bg = wizardBase === 'background';
+            const ex = wizardExpandable;
+            const ic = wizardBase === 'icononly';
+
+            document.getElementById('wizardPreview').innerHTML = ic
+                ? `<div style="text-align:left;padding:2rem;border:2px solid #ddd;border-radius:8px;background:#f8f9fa;">
+                    <h2 style="display:flex;align-items:center;gap:12px;margin:0;"><img src="${d.icon}" alt="GenAI ${wizardPolicy} icon" width="90" height="105" style="flex-shrink:0;">${d.title}</h2>
+                  </div>`
+                : `<div style="padding:2rem 2rem 4rem 4rem;border:3px solid ${d.color};border-radius:1.25rem;background:${bg ? d.bg : '#ffffff'};font-size:1rem;">
+                    <h2><img src="${d.icon}" alt="GenAI ${wizardPolicy} icon" width="90" height="105">&nbsp;${d.title}</h2><hr/>
+                    ${ex ? `<details style="cursor:pointer"><summary style="font-size:120%;">GenAI Use Guidance</summary>${d.body}</details>` : `<div>${d.body}</div>`}
+                  </div>`;
+        }
+
+
+
+        // ── Restart wizard ──
+        function restartWizard() {
+            // Go back to pathway selection
+            showPathwaySelection();
+        }
+
+        // ── Top-nav functions ──
+        function showLanding() {
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('overviewTab').classList.add('active');
+            document.getElementById('pathwaySelection').style.display = 'none';
+            document.getElementById('landingPage').style.display = 'block';
+            document.getElementById('selfDirectedPage').style.display = 'none';
+            current = null;
+        }
+
+        function setCategory(btn, cat) {
+            document.getElementById('overviewTab').classList.remove('active');
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('pathwaySelection').style.display = 'none';
+            document.getElementById('landingPage').style.display = 'none';
+            document.getElementById('selfDirectedPage').style.display = 'block';
+            document.getElementById('stickyFooter').classList.add('visible');
+            current = cat;
+            render();
+        }
+
+        function toggle(t) {
+            const bg = document.getElementById('bgToggle'),
+                  ex = document.getElementById('expandToggle'),
+                  ic = document.getElementById('iconToggle');
+            if (t === 'icon' && ic.checked) { bg.checked = ex.checked = false; }
+            else if ((t === 'bg' || t === 'expand') && (bg.checked || ex.checked)) ic.checked = false;
+            render();
+        }
+
+        function clearAll() {
+            ['bgToggle', 'expandToggle', 'iconToggle'].forEach(id => document.getElementById(id).checked = false);
+            render();
+        }
+
+        function render() {
+            if (!current) return;
+            const d  = content[current],
+                  bg = document.getElementById('bgToggle').checked,
+                  ex = document.getElementById('expandToggle').checked,
+                  ic = document.getElementById('iconToggle').checked;
+
+            document.getElementById('preview').innerHTML = ic
+                ? `<div style="text-align:left;padding:2rem;background:#f8f9fa;border-radius:8px;border:2px solid #ddd;">
+                    <h2 style="display:flex;align-items:center;gap:12px;margin:0;"><img src="${d.icon}" alt="GenAI ${current} icon" width="90" height="105" style="flex-shrink:0;">${d.title}</h2>
+                  </div>`
+                : `<div style="padding:2rem 2rem 4rem 4rem;border:3px solid ${d.color};border-radius:1.25rem;background:${bg ? d.bg : '#ffffff'};font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                    <h2><img src="${d.icon}" alt="GenAI ${current} icon" width="90" height="105">&nbsp;${d.title}</h2><hr/>
+                    ${ex ? `<details style="cursor:pointer"><summary style="font-size:120%;">GenAI Use Guidance</summary>${d.body}</details>` : `<div>${d.body}</div>`}
+                  </div>`;
+        }
+
+        // ── "Add To Course" button handlers ──
+        document.getElementById('addToCourseBtn')?.addEventListener('click', () => {
+            // TODO: Add your embed/apply logic here
+            alert('Add To Course clicked! Implement your course integration logic here.');
+        });
+        
+        document.getElementById('guidedAddToCourseBtn')?.addEventListener('click', () => {
+            // TODO: Add your embed/apply logic here
+            alert('Add To Course clicked! Implement your course integration logic here.');
+        });
+    </script>
+</body>
+</html>
