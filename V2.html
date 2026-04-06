@@ -118,7 +118,7 @@
             outline-offset: 2px;
         }
         .overview-btn:hover::after {
-            content: "Help me build it";
+            content: "Start";
             position: absolute;
             bottom: 100%;
             left: 50%;
@@ -489,6 +489,7 @@
         .btn-go:hover { background: #e6bc00; }
         .btn-go:focus { outline: 3px solid #041E42; outline-offset: 2px; }
         .btn-restart { padding: 10px 20px; background: none; border: 2px solid #bc204b; color: #bc204b; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: all 0.2s; margin-left: auto; }
+        .btn-restart .fa { margin-right: 6px; }
         .btn-restart:hover { background: #bc204b; color: white; }
         .btn-restart:focus { outline: 3px solid #ffd100; outline-offset: 2px; }
         .btn-clear { padding: 8px 16px; background: #96BEE6; color: #001E44; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
@@ -581,6 +582,7 @@
                     </div>
                     <div class="wizard-nav">
                         <button class="btn-next" id="next1" onclick="goStep(2)" disabled>Next →</button>
+                        <button class="btn-restart" onclick="restartWizard()"><i class="fa fa-repeat" aria-hidden="true"></i>Start Over</button>
                     </div>
                 </div>
 
@@ -604,6 +606,7 @@
                     <div class="wizard-nav">
                         <button class="btn-back" onclick="goStep(1)">← Back</button>
                         <button class="btn-next" id="next2" onclick="advanceFromStep2()" disabled>Next →</button>
+                        <button class="btn-restart" onclick="restartWizard()"><i class="fa fa-repeat" aria-hidden="true"></i>Start Over</button>
                     </div>
                 </div>
 
@@ -643,6 +646,7 @@
                     <div class="wizard-nav">
                         <button class="btn-back" onclick="goStep(2)">← Back</button>
                         <button class="btn-next" id="next3" onclick="goStep(4)" disabled>Next →</button>
+                        <button class="btn-restart" onclick="restartWizard()"><i class="fa fa-repeat" aria-hidden="true"></i>Start Over</button>
                     </div>
                 </div>
 
@@ -672,6 +676,11 @@
                     <!-- Preview Area -->
                     <div class="step-label" style="margin-top:16px;">Preview</div>
                     <div id="wizardPreview" style="margin-bottom:24px;"></div>
+
+                    <div class="wizard-nav">
+                        <button class="btn-back" onclick="goBackFromStep4()">← Back</button>
+                        <button class="btn-restart" onclick="restartWizard()"><i class="fa fa-repeat" aria-hidden="true"></i>Start Over</button>
+                    </div>
                 </div>
 
             </div>
@@ -720,7 +729,7 @@
 
         <!-- ═══ STICKY FOOTER ═══ -->
         <div class="sticky-footer" id="stickyFooter">
-            <button class="btn-select" id="addToCourseBtn">Add To Course</button>
+            <button class="btn-select" id="selfDirectedAddToCourseBtn">Add To Course</button>
         </div>
 
     </div>
@@ -973,6 +982,7 @@
             document.getElementById('pathwaySelection').style.display = 'none';
             document.getElementById('landingPage').style.display = 'block';
             document.getElementById('selfDirectedPage').style.display = 'none';
+            document.getElementById('stickyFooter').classList.remove('visible');
             current = null;
         }
 
@@ -1020,15 +1030,11 @@
         }
 
         // ── "Add To Course" button handlers ──
-        document.getElementById('addToCourseBtn')?.addEventListener('click', () => {
+        document.getElementById('selfDirectedAddToCourseBtn')?.addEventListener('click', () => {
             // TODO: Add your embed/apply logic here
             alert('Add To Course clicked! Implement your course integration logic here.');
         });
         
-        document.getElementById('guidedAddToCourseBtn')?.addEventListener('click', () => {
-            // TODO: Add your embed/apply logic here
-            alert('Add To Course clicked! Implement your course integration logic here.');
-        });
     </script>
 </body>
 </html>
