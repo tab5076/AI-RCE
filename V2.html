@@ -388,6 +388,25 @@
         }
         .choice-card p { margin: 0; font-size: 0.85rem; color: #444; line-height: 1.5; }
 
+        /* Step 1 permission cards */
+        .permission-card {
+            align-items: flex-start;
+            text-align: left;
+        }
+        .permission-card h2 {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .permission-card-icon {
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
+        }
+
         /* Style step cards */
         .style-grid { 
             display: grid; 
@@ -567,16 +586,16 @@
                 <div class="step-panel active" id="step1">
                     <div class="step-label">What level of GenAI use applies to this course or assignment?</div>
                     <div class="choice-grid">
-                        <button class="choice-card" id="card-Allowed" onclick="selectPolicy('Allowed', this)" aria-label="Select Allowed permission level">
-                            <h2><img src="https://lmstools.ais.psu.edu/psuicons/ai/allowed%20icon.png" alt="" height="22" style="vertical-align:middle;" role="presentation"> Allowed</h2>
+                        <button class="choice-card permission-card" id="card-Allowed" onclick="selectPolicy('Allowed', this)" aria-label="Select Allowed permission level">
+                            <h2><img class="permission-card-icon" src="https://lmstools.ais.psu.edu/psuicons/ai/allowed%20icon.png" alt="" role="presentation">Allowed</h2>
                             <p>Students may responsibly use GenAI within specific, instructor-defined guidelines.</p>
                         </button>
-                        <button class="choice-card" id="card-Limited" onclick="selectPolicy('Limited', this)" aria-label="Select Limited permission level">
-                            <h2><img src="https://lmstools.ais.psu.edu/psuicons/ai/small/limited%20icon.png" alt="" height="22" style="vertical-align:middle;" role="presentation"> Limited</h2>
+                        <button class="choice-card permission-card" id="card-Limited" onclick="selectPolicy('Limited', this)" aria-label="Select Limited permission level">
+                            <h2><img class="permission-card-icon" src="https://lmstools.ais.psu.edu/psuicons/ai/small/limited%20icon.png" alt="" role="presentation">Limited</h2>
                             <p>Students may responsibly use GenAI within specific, instructor-defined guidelines.</p>
                         </button>
-                        <button class="choice-card" id="card-NotPermitted" onclick="selectPolicy('NotPermitted', this)" aria-label="Select Not Permitted permission level">
-                            <h2><img src="https://lmstools.ais.psu.edu/psuicons/ai/not%20permitted%20no%20spark%20icon.png" alt="" height="22" style="vertical-align:middle;" role="presentation"> Not Permitted</h2>
+                        <button class="choice-card permission-card" id="card-NotPermitted" onclick="selectPolicy('NotPermitted', this)" aria-label="Select Not Permitted permission level">
+                            <h2><img class="permission-card-icon" src="https://lmstools.ais.psu.edu/psuicons/ai/not%20permitted%20no%20spark%20icon.png" alt="" role="presentation">Not Permitted</h2>
                             <p>Students may not use GenAI for this course or assignment.</p>
                         </button>
                     </div>
